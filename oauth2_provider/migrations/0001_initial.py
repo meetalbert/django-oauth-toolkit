@@ -51,7 +51,7 @@ class Migration(migrations.Migration):
                 ('expires', models.DateTimeField()),
                 ('redirect_uri', models.CharField(max_length=255)),
                 ('scope', models.TextField(blank=True)),
-                ('application', models.ForeignKey(to=oauth2_settings.APPLICATION_MODEL)),
+                ('application', models.ForeignKey(to=oauth2_settings.APPLICATION_MODEL, on_delete=models.deletion.CASCADE)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.deletion.CASCADE)),
             ],
         ),
