@@ -4,8 +4,7 @@ from django.urls import reverse
 from django.db import models
 from django.utils import timezone
 
-from django.utils.translation import ugettext_lazy as _
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ImproperlyConfigured
 
 from .settings import oauth2_settings
@@ -14,7 +13,6 @@ from .generators import generate_client_secret, generate_client_id
 from .validators import validate_uris
 
 
-@python_2_unicode_compatible
 class AbstractApplication(models.Model):
     """
     An Application instance represents a Client on the Authorization server.
@@ -128,7 +126,6 @@ class Application(AbstractApplication):
 Application._meta.swappable = 'OAUTH2_PROVIDER_APPLICATION_MODEL'
 
 
-@python_2_unicode_compatible
 class Grant(models.Model):
     """
     A Grant instance represents a token with a short lifetime that can
@@ -164,7 +161,6 @@ class Grant(models.Model):
         return self.code
 
 
-@python_2_unicode_compatible
 class AccessToken(models.Model):
     """
     An AccessToken instance represents the actual access token to
@@ -223,7 +219,6 @@ class AccessToken(models.Model):
         return self.token
 
 
-@python_2_unicode_compatible
 class RefreshToken(models.Model):
     """
     A RefreshToken instance represents a token that can be swapped for a new
