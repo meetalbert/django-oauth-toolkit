@@ -220,8 +220,10 @@ class OAuth2Validator(RequestValidator):
             return False
 
         try:
-            access_token = AccessToken.objects.select_related("application", "user").get(
-                token=token)
+            access_token = AccessToken.objects.select_related(
+                "application", 
+                "user",
+            ).get(token=token)
             if access_token.is_valid(scopes):
                 request.client = access_token.application
                 request.user = access_token.user
@@ -301,6 +303,8 @@ class OAuth2Validator(RequestValidator):
         if request.grant_type == 'client_credentials':
             request.user = None
 
+        print(f"==== OAUTH: CREATING ACCCESS TOKEN - {token['access_token']}")
+
         access_token = AccessToken(
             user=request.user,
             scope=token['scope'],
@@ -310,6 +314,8 @@ class OAuth2Validator(RequestValidator):
         access_token.save()
 
         if 'refresh_token' in token:
+            print(f"==== OAUTH: CREATING REFRESH TOKEN - {token['refresh_token']}")
+
             refresh_token = RefreshToken(
                 user=request.user,
                 token=token['refresh_token'],
