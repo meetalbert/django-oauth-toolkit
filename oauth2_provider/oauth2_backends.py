@@ -19,6 +19,7 @@ class OAuthLibCore(object):
         :params server: An instance of oauthlib.oauth2.Server class
         """
         self.server = server or oauth2.Server(oauth2_settings.OAUTH2_VALIDATOR_CLASS())
+        print('**** OAUTHLIB CORE INIT server: ', self.server)
 
     def _get_escaped_full_path(self, request):
         """
@@ -122,9 +123,25 @@ class OAuthLibCore(object):
         """
         uri, http_method, body, headers = self._extract_params(request)
 
+        print(
+            f'3**** OAuthLibCore.create_token_response KWARGS'
+            f'uri: {uri}'
+            f'http_method: {http_method}'
+            f'body: {body}'
+            f'headers: {headers}'
+        )
+
         headers, body, status = self.server.create_token_response(uri, http_method, body,
                                                                   headers)
         uri = headers.get("Location", None)
+
+        print(
+            f'4**** OAuthLibCore.create_token_response RESPONSE'
+            f'headers: {headers}'
+            f'body: {body}'
+            f'status: {status}'
+            f'uri: {uri}'
+        )
 
         return uri, headers, body, status
 
