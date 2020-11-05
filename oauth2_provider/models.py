@@ -64,6 +64,12 @@ class AbstractApplication(models.Model):
                                      default=generate_client_secret, db_index=True)
     name = models.CharField(max_length=255, blank=True)
     skip_authorization = models.BooleanField(default=False)
+    access_token_expire_seconds = models.IntegerField(
+        default=oauth2_settings.ACCESS_TOKEN_EXPIRE_SECONDS
+    )
+    refresh_token_expire_seconds = models.IntegerField(
+        default=oauth2_settings.REFRESH_TOKEN_EXPIRE_SECONDS
+    )
 
     class Meta:
         abstract = True
@@ -186,6 +192,11 @@ class AccessToken(models.Model):
 
         :param scopes: An iterable containing the scopes to check or None
         """
+        print(
+            f'****** ACCESS TOKEN IS VALID\n'
+            f'not expired: {not self.is_expired()}\n'
+            f'allow scopes: {self.allow_scopes(scopes)}\n'
+        )
         return not self.is_expired() and self.allow_scopes(scopes)
 
     def is_expired(self):
@@ -237,6 +248,21 @@ class RefreshToken(models.Model):
     application = models.ForeignKey(oauth2_settings.APPLICATION_MODEL, on_delete=models.CASCADE)
     access_token = models.OneToOneField(AccessToken,
                                         related_name='refresh_token', on_delete=models.CASCADE)
+    expires = models.DateTimeField()
+
+    def is_valid(self, scopes=None):
+        """
+        Checks if the refresh token is valid.
+
+        :param scopes: An iterable containing the scopes to check or None
+        """
+        return not self.is_expired()
+
+    def is_expired(self):
+        """
+        Check token expiration with timezone awareness
+        """
+        return timezone.now() >= self.expires
 
     def revoke(self):
         """
