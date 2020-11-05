@@ -39,10 +39,12 @@ DEFAULTS = {
     'READ_SCOPE': 'read',
     'WRITE_SCOPE': 'write',
     'AUTHORIZATION_CODE_EXPIRE_SECONDS': 60,
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 36000,
     'APPLICATION_MODEL': getattr(settings, 'OAUTH2_PROVIDER_APPLICATION_MODEL', 'oauth2_provider.Application'),
     'REQUEST_APPROVAL_PROMPT': 'force',
     'ALLOWED_REDIRECT_URI_SCHEMES': ['http', 'https'],
+
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 36000, # 10 hours
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 31556952, # 1 year
 
     # Special settings that will be evaluated at runtime
     '_SCOPES': [],
