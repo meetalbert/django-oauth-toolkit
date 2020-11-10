@@ -302,30 +302,17 @@ class OAuth2Validator(RequestValidator):
         )
         access_token_expires = now + access_token_expires_delta
 
-        # Get previous refresh token's expiration if refresh token has not yet 
-        # expired. This ensures that we carry over a refresh token's expiry
-        # across newly generated refresh tokens
-        refresh_token_expires = None
-
         if request.refresh_token:
             # remove used refresh token
             try:
-                refresh_token = RefreshToken.objects.get(
+                RefreshToken.objects.get(
                     token=request.refresh_token
-                )
-                
-                # Carry over refresh token expiry to new refresh token
-                if not refresh_token.is_expired():
-                    refresh_token_expires = refresh_token.expires
-
-                refresh_token.revoke()
+                ).revoke()
             except RefreshToken.DoesNotExist:
-                assert()  # TODO though being here would be very strange, at least log the error
+                assert()
 
         if request.grant_type == 'client_credentials':
             request.user = None
-
-        print(f"==== OAUTH: CREATING ACCCESS TOKEN - {token['access_token']}")
 
         access_token = AccessToken(
             user=request.user,
@@ -336,18 +323,18 @@ class OAuth2Validator(RequestValidator):
         )
         access_token.save()
 
-        if 'refresh_token' in token:
-            print(f"==== OAUTH: CREATING REFRESH TOKEN - {token['refresh_token']}")
+        # Return access token expires_in (seconds) back to server
+        token['access_token_expires_in'] = access_token_expire_seconds
 
-            if not refresh_token_expires:
-                # Get refresh token expiration (in seconds) from application
-                refresh_token_expire_seconds = (
-                    application.refresh_token_expire_seconds
-                )
-                refresh_token_expires_delta = timedelta(
-                    seconds=refresh_token_expire_seconds
-                )
-                refresh_token_expires = now + refresh_token_expires_delta
+        if 'refresh_token' in token:
+            # Get refresh token expiration (in seconds) from application
+            refresh_token_expire_seconds = (
+                application.refresh_token_expire_seconds
+            )
+            refresh_token_expires_delta = timedelta(
+                seconds=refresh_token_expire_seconds
+            )
+            refresh_token_expires = now + refresh_token_expires_delta
 
             refresh_token = RefreshToken(
                 user=request.user,
@@ -357,9 +344,9 @@ class OAuth2Validator(RequestValidator):
                 expires=refresh_token_expires,
             )
             refresh_token.save()
-
-        # TODO check out a more reliable way to communicate expire time to oauthlib
-        token['expires_in'] = oauth2_settings.ACCESS_TOKEN_EXPIRE_SECONDS
+            
+            # Return refresh token expires_in (seconds) back to server
+            token['refresh_token_expires_in'] = refresh_token_expire_seconds
 
     def revoke_token(self, token, token_type_hint, request, *args, **kwargs):
         """
@@ -390,7 +377,12 @@ class OAuth2Validator(RequestValidator):
         Check username and password correspond to a valid and active User
         """
         u = authenticate(username=username, password=password)
-        if u is not None and u.is_active:
+
+        # NOTE: [Removed from original code] - check for u.is_active. 
+        # Source of truth for user is_active lives in Albert main and we
+        # reject the request at the auth service level if main returns
+        # Profile.is_active is False
+        if u is not None:
             request.user = u
             return True
         return False

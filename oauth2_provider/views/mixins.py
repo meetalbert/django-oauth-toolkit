@@ -75,11 +75,6 @@ class OAuthLibMixin(object):
         """
         server_class = cls.get_server_class()
         validator_class = cls.get_validator_class()
-        print(
-            f'3a***** GET SERVER'
-            f'server_class: {server_class}'
-            f'validator_class: {validator_class}'
-        )
         return server_class(validator_class())
 
     @classmethod
@@ -89,13 +84,8 @@ class OAuthLibMixin(object):
         """
         if not hasattr(cls, '_oauthlib_core'):
             server = cls.get_server()
-            print('3b**** GET OAUTHLIB CORE server: ', server)
             core_class = cls.get_oauthlib_backend_class()
-            print(
-                f'3c***** OAUTHLIB BACKEND CLASS: {core_class}'
-            )
             cls._oauthlib_core = core_class(server)
-            print('3d**** OAUTH LIB CORE: ', cls._oauthlib_core)
         return cls._oauthlib_core
 
     def validate_authorization_request(self, request):
@@ -130,10 +120,8 @@ class OAuthLibMixin(object):
 
         :param request: The current django.http.HttpRequest object
         """
-        print('2**** OAuthLibMixin.create_token_response START')
         core = self.get_oauthlib_core()
         result = core.create_token_response(request)
-        print('5**** OAuthLibMixin.create_token_response RESULT: ', result)
         return result
 
     def create_revocation_response(self, request):

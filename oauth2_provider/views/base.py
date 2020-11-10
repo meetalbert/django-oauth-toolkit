@@ -169,30 +169,11 @@ class TokenView(CsrfExemptMixin, OAuthLibMixin, View):
 
     @method_decorator(sensitive_post_parameters('password'))
     def post(self, request, *args, **kwargs):
-        print('1**** TokenView.post START')
-
         url, headers, body, status = self.create_token_response(request)
-
-        print(
-            f'6**** TokenView.post create token RESPONSE'
-            f'url: {url}'
-            f'headers: {headers}'
-            f'body: {body}'
-            f'status: {status}'
-        )
-
         response = HttpResponse(content=body, status=status)
         for k, v in headers.items():
-
-            print(
-                f'7**** TokenView.post RESPONSE iteration'
-                f'k: {k}'
-                f'v: {v}'
-            )
-
             response[k] = v
 
-        print('8**** TokenView.post RESPONSE FINAL: ', response)
         return response
 
 

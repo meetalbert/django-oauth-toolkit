@@ -192,11 +192,6 @@ class AccessToken(models.Model):
 
         :param scopes: An iterable containing the scopes to check or None
         """
-        print(
-            f'****** ACCESS TOKEN IS VALID\n'
-            f'not expired: {not self.is_expired()}\n'
-            f'allow scopes: {self.allow_scopes(scopes)}\n'
-        )
         return not self.is_expired() and self.allow_scopes(scopes)
 
     def is_expired(self):
