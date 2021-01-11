@@ -482,6 +482,10 @@ class OAuth2Validator(RequestValidator):
         # backwards compatibility.
         is_legacy_token = request.POST.get('is_legacy_token', False)
 
+        print('REQUEST POST ', request.POST)
+        print('IS LEGACY TOKEN ', is_legacy_token) 
+        print('KWARGS ', kwargs)
+
         if is_legacy_token:
             access_token_expire_seconds = (
                 settings.LEGACY_ACCESS_TOKEN_EXPIRE_SECONDS,
