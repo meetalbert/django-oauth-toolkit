@@ -61,6 +61,7 @@ class OAuthLibCore:
         http_method = request.method
         headers = self.extract_headers(request)
         body = urlencode(self.extract_body(request))
+        print('EXTRACTING PARAMS body=', body)
         return uri, http_method, body, headers
 
     def extract_headers(self, request):
@@ -69,6 +70,7 @@ class OAuthLibCore:
         :param request: The current django.http.HttpRequest object
         :return: a dictionary with OAuthLib needed headers
         """
+
         headers = request.META.copy()
         if "wsgi.input" in headers:
             del headers["wsgi.input"]
@@ -76,6 +78,8 @@ class OAuthLibCore:
             del headers["wsgi.errors"]
         if "HTTP_AUTHORIZATION" in headers:
             headers["Authorization"] = headers["HTTP_AUTHORIZATION"]
+
+        print('EXTRACTING HEADERS headers=', headers)
 
         return headers
 
@@ -85,6 +89,8 @@ class OAuthLibCore:
         :param request: The current django.http.HttpRequest object
         :return: provided POST parameters
         """
+        print('EXTRACTING BODY body=', request.POST.items())
+
         return request.POST.items()
 
     def validate_authorization_request(self, request):
