@@ -480,9 +480,9 @@ class OAuth2Validator(RequestValidator):
 
         # Users on older app versions should get long-lived tokens for
         # backwards compatibility.
-        is_legacy_token = request.POST.get('is_legacy_token', False)
+        is_legacy_token = kwargs.get('is_legacy_token', False)
 
-        print('REQUEST POST ', request.POST)
+        print('REQUEST DOES NOT HAVE POST ', hasattr(request, 'POST', False))
         print('IS LEGACY TOKEN ', is_legacy_token) 
         print('KWARGS ', kwargs)
 
