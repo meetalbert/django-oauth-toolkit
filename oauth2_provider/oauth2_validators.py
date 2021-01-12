@@ -482,7 +482,8 @@ class OAuth2Validator(RequestValidator):
         # backwards compatibility.
         is_legacy_token = kwargs.get('is_legacy_token', False)
 
-        print('REQUEST DOES NOT HAVE POST ', hasattr(request, 'POST', False))
+        print('REQUEST DOES NOT HAVE POST ', hasattr(request, 'POST'))
+        print('REQUEST is_legacy_token', getattr(request, 'is_legacy_token', None))
         print('IS LEGACY TOKEN ', is_legacy_token) 
         print('KWARGS ', kwargs)
 
