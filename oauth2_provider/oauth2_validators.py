@@ -482,6 +482,7 @@ class OAuth2Validator(RequestValidator):
         # backwards compatibility.
         is_legacy_token = getattr(request, 'is_legacy_token', False)
 
+        print('**** REQUEST ', request)
         print('**** IS LEGACY TOKEN ', is_legacy_token)
 
         if is_legacy_token:
