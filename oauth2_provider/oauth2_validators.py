@@ -482,6 +482,8 @@ class OAuth2Validator(RequestValidator):
         # backwards compatibility.
         is_legacy_token = getattr(request, 'is_legacy_token', False)
 
+        print('**** IS LEGACY TOKEN ', is_legacy_token)
+
         if is_legacy_token:
             expire_seconds = oauth2_settings.LEGACY_ACCESS_TOKEN_EXPIRE_SECONDS
         else:
