@@ -488,11 +488,15 @@ class OAuth2Validator(RequestValidator):
         if is_legacy_token:
             expire_seconds = oauth2_settings.LEGACY_ACCESS_TOKEN_EXPIRE_SECONDS
         else:
+            print('***** APP IS ', app)
+            print('***** APP IS ', app.id, ' NAME ', app.name)
+            print('***** APP ACCESS TOKEN EXPIRE SECONDS ', app.access_token_expire_seconds)
             expire_seconds = app.access_token_expire_seconds
 
         # expires_in is passed to Server on initialization
         # custom server class can have logic to override this
         expires = timezone.now() + timedelta(seconds=expire_seconds)
+        print('**** CREATING EXPIRATION ', expires)
 
         if request.grant_type == "client_credentials":
             request.user = None
