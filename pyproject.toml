@@ -1,0 +1,17 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "oauth2_provider"
+version = "2.0.0"
+description = "Common packages"
+authors = []
+
+[tool.poetry.dependencies]
+django =  ">= 2.2"
+requests =  ">= 2.13.0"
+oauthlib =  ">= 3.1.0"
+python = "==3.9.6"
+
+[tool.poetry.dev-dependencies]
