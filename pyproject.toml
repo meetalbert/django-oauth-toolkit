@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "django_oauth_toolkit"
-version = "1.3.3"
+version = "2.0.0"
 description = "Common packages"
 authors = []
 packages = [
