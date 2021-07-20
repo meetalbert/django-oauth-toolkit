@@ -7,6 +7,12 @@ name = "django_oauth_toolkit"
 version = "2.0.0"
 description = "Common packages"
 authors = []
+packages = [
+    { include = "oauth_provider" },
+]
+exclude = [
+    "tests",
+]
 
 [tool.poetry.dependencies]
 django =  ">= 2.2"
