@@ -40,11 +40,11 @@ setup(
     author_email='synasius@gmail.com, mpippi@gmail.com',
     url='https://github.com/evonove/django-oauth-toolkit',
     license='BSD',
-    packages=find_packages(where='oauth_provider'),
+    packages=find_packages(),
     include_package_data=True,
     test_suite='runtests',
     install_requires=[
-        'django==3.0.7',
+        'django>=3.0.7',
         'django-braces>=1.2.2',
         'oauthlib==1.0.1',
     ],
