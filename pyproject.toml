@@ -3,13 +3,13 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "django_oauth_toolkit"
-version = "2.0.0"
+name = "oauth2_provider"
+version = "2.0.2"
 description = "Common packages"
 authors = []
-packages = [
-    { include = "oauth2_provider/**/*.py"},
-]
+#packages = [
+#    { include = "oauth2_provider/**/*.py"},
+#]
 exclude = [
     "tests",
 ]
