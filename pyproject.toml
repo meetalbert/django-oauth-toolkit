@@ -8,7 +8,7 @@ version = "2.0.0"
 description = "Common packages"
 authors = []
 packages = [
-    { include = "oauth2_provider"},
+    { include = "oauth2_provider/*.py"},
     { include = "oauth2_provider/**/*.py"},
 ]
 exclude = [
