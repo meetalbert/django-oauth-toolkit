@@ -273,7 +273,7 @@ class TestDeviceFlow(DeviceFlowBaseTestCase):
         token_data = token_response.json()
         assert token_data == {
             "access_token": mock.ANY,
-            "expires_in": 36000,
+            "expires_in": 86400,
             "token_type": "Bearer",
             "scope": "read write",
             "refresh_token": mock.ANY,
