@@ -42,7 +42,7 @@ Create a Django project::
 
     django-admin startproject iam
 
-This will create a mysite directory in your current directory. With the following estructure::
+This will create a mysite directory in your current directory. With the following structure::
 
     .
     └── iam
@@ -82,12 +82,12 @@ That’ll create a directory :file:`users`, which is laid out like this::
 If you’re starting a new project, it’s highly recommended to set up a custom user model, even if the default `User`_ model is sufficient for you. This model behaves identically to the default user model, but you’ll be able to customize it in the future if the need arises.
 -- `Django documentation`_
 
-Edit :file:`users/models.py` adding the code bellow:
+Edit :file:`users/models.py` adding the code below:
 
 .. code-block:: python
 
     from django.contrib.auth.models import AbstractUser
-  
+
     class User(AbstractUser):
         pass
 
@@ -105,13 +105,13 @@ Change :file:`iam/settings.py` to add ``users`` application to ``INSTALLED_APPS`
         'users',
     ]
 
-Configure ``users.User`` to be the model used for the ``auth`` application adding ``AUTH_USER_MODEL`` to :file:`iam/settings.py`:
+Configure ``users.User`` to be the model used for the ``auth`` application by adding ``AUTH_USER_MODEL`` to :file:`iam/settings.py`:
 
 .. code-block:: python
 
-    AUTH_USER_MODEL='users.User'
+    AUTH_USER_MODEL = 'users.User'
 
-Create inital migration for ``users`` application ``User`` model::
+Create initial migration for ``users`` application ``User`` model::
 
     python manage.py makemigrations
 
@@ -152,7 +152,7 @@ The ``migrate`` output::
 Django OAuth Toolkit
 --------------------
 
-Django OAuth Toolkit can help you providing out of the box all the endpoints, data and logic needed to add OAuth2 capabilities to your Django projects.
+Django OAuth Toolkit can help you by providing, out of the box, all the endpoints, data, and logic needed to add OAuth2 capabilities to your Django projects.
 
 Install Django OAuth Toolkit::
 
@@ -191,10 +191,11 @@ Include ``oauth2_provider.urls`` to :file:`iam/urls.py` as follows:
 
     from django.contrib import admin
     from django.urls import include, path
+    from oauth2_provider import urls as oauth2_urls
 
     urlpatterns = [
         path('admin/', admin.site.urls),
-        path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+        path('o/', include(oauth2_urls)),
     ]
 
 This will make available endpoints to authorize, generate token and create OAuth applications.
@@ -203,7 +204,7 @@ Last change, add ``LOGIN_URL`` to :file:`iam/settings.py`:
 
 .. code-block:: python
 
-    LOGIN_URL='/admin/login/'
+    LOGIN_URL = '/admin/login/'
 
 We will use Django Admin login to make our life easy.
 
@@ -213,8 +214,8 @@ Create a user::
 
     Username: wiliam
     Email address: me@wiliam.dev
-    Password: 
-    Password (again): 
+    Password:
+    Password (again):
     Superuser created successfully.
 
 OAuth2 Authorization Grants
@@ -231,20 +232,27 @@ We will start by given a try to the grant types listed below:
 * Authorization code
 * Client credential
 
-This two grant types cover the most initially used uses cases.
+These two grant types cover the most initially used use cases.
 
 Authorization Code
 ------------------
 
-The Authorization Code flow is best used in web and mobile apps. This is the flow used for third party integration, the user authorize your partner to access its products in your APIs.
+The Authorization Code flow is best used in web and mobile apps. This is the flow used for third party integration, the user authorizes your partner to access its products in your APIs.
 
 Start the development server::
 
     python manage.py runserver
 
-Point your browser to http://127.0.0.1:8000/o/applications/register/ lets create an application.
+Point your browser to http://127.0.0.1:8000/o/applications/register/ and let's create an application.
 
-Fill the form as show in the screenshot bellow and before save take note of ``Client id`` and ``Client secret`` we will use it in a minute.
+Fill the form as shown in the screenshot below and before clicking on save take note of ``Client id`` and ``Client secret``, we will use it in a minute.
+
+If you want to use this application with OIDC and ``HS256`` (see :doc:`OpenID Connect <oidc>`), uncheck ``Hash client secret`` to allow verifying tokens using JWT signatures. This means your client secret will be stored in cleartext but is the only way to successfully use signed JWT's with ``HS256``.
+
+.. note::
+    ``RS256`` is the more secure algorithm for signing your JWTs. Only use ``HS256`` if you must.
+    Using ``RS256`` will allow you to keep your ``client_secret`` hashed.
+
 
 .. image:: _images/application-register-auth-code.png
    :alt: Authorization code application registration
@@ -256,13 +264,39 @@ Export ``Client id`` and ``Client secret`` values as environment variable:
     export ID=vW1RcAl7Mb0d5gyHNQIAcH110lWoOW2BmWJIero8
     export SECRET=DZFpuNjRdt5xUEzxXovAp40bU3lQvoMvF3awEStn61RXWE0Ses4RgzHWKJKTvUCHfRkhcBi3ebsEfSjfEO96vo2Sh6pZlxJ6f7KcUbhvqMMPoVxRwv4vfdWEoWMGPeIO
 
-To start the Authorization code flow got to this `URL`_ with is the same as show bellow::
+Now let's generate an authentication code grant with PKCE (Proof Key for Code Exchange), useful to prevent authorization code injection. To do so, you must first generate a ``code_verifier`` random string between 43 and 128 characters, which is then encoded to produce a ``code_challenge``:
 
-    http://127.0.0.1:8000/o/authorize/?response_type=code&client_id=vW1RcAl7Mb0d5gyHNQIAcH110lWoOW2BmWJIero8&redirect_uri=http://127.0.0.1:8000/noexist/callback
+.. sourcecode:: python
+
+    import random
+    import string
+    import base64
+    import hashlib
+
+    code_verifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(random.randint(43, 128)))
+
+    code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8').replace('=', '')
+
+Take note of ``code_challenge`` since we will include it in the code flow URL. It should look something like ``XRi41b-5yHtTojvCpXFpsLUnmGFz6xR15c3vpPANAvM``.
+
+
+Export ``code_verifier`` value as environment variable, it should be something like:
+
+.. sourcecode:: sh
+
+    export CODE_VERIFIER=N0hHRVk2WDNCUUFPQTIwVDNZWEpFSjI4UElNV1pSTlpRUFBXNTEzU0QzRTMzRE85WDFWTzU2WU9ESw==
+
+
+To start the Authorization code flow go to this `URL`_ which is the same as shown below::
+
+    http://127.0.0.1:8000/o/authorize/?response_type=code&code_challenge=XRi41b-5yHtTojvCpXFpsLUnmGFz6xR15c3vpPANAvM&code_challenge_method=S256&client_id=vW1RcAl7Mb0d5gyHNQIAcH110lWoOW2BmWJIero8&redirect_uri=http://127.0.0.1:8000/noexist/callback
 
 Note the parameters we pass:
 
 * **response_type**: ``code``
+* **code_challenge**: ``XRi41b-5yHtTojvCpXFpsLUnmGFz6xR15c3vpPANAvM``
+* **code_challenge_method**: ``S256``
 * **client_id**: ``vW1RcAl7Mb0d5gyHNQIAcH110lWoOW2BmWJIero8``
 * **redirect_uri**: ``http://127.0.0.1:8000/noexist/callback``
 
@@ -273,13 +307,13 @@ Go ahead and authorize the ``web-app``
 .. image:: _images/application-authorize-web-app.png
    :alt: Authorization code authorize web-app
 
-Remenber we used ``http://127.0.0.1:8000/noexist/callback`` as ``redirect_uri`` you will get a **Page not found (404)** but it worked if you get a url like::
+Remember we used ``http://127.0.0.1:8000/noexist/callback`` as ``redirect_uri`` you will get a **Page not found (404)** but it worked if you get a url like::
 
     http://127.0.0.1:8000/noexist/callback?code=uVqLxiHDKIirldDZQfSnDsmYW1Abj2
 
-This is the OAuth2 provider trying to give you a ``code`` in this case ``uVqLxiHDKIirldDZQfSnDsmYW1Abj2``.
+This is the OAuth2 provider trying to give you a ``code``. in this case ``uVqLxiHDKIirldDZQfSnDsmYW1Abj2``.
 
-Export it as environment variable:
+Export it as an environment variable:
 
 .. code-block:: sh
 
@@ -287,7 +321,7 @@ Export it as environment variable:
 
 Now that you have the user authorization is time to get an access token::
 
-    curl -X POST -H "Cache-Control: no-cache" -H "Content-Type: application/x-www-form-urlencoded" "http://127.0.0.1:8000/o/token/" -d "client_id=${ID}" -d "client_secret=${SECRET}" -d "code=${CODE}" -d "redirect_uri=http://127.0.0.1:8000/noexist/callback" -d "grant_type=authorization_code"
+    curl -X POST -H "Cache-Control: no-cache" -H "Content-Type: application/x-www-form-urlencoded" "http://127.0.0.1:8000/o/token/" -d "client_id=${ID}" -d "client_secret=${SECRET}" -d "code=${CODE}" -d "code_verifier=${CODE_VERIFIER}" -d "redirect_uri=http://127.0.0.1:8000/noexist/callback" -d "grant_type=authorization_code"
 
 To be more easy to visualize::
 
@@ -298,12 +332,13 @@ To be more easy to visualize::
         -d "client_id=${ID}" \
         -d "client_secret=${SECRET}" \
         -d "code=${CODE}" \
+        -d "code_verifier=${CODE_VERIFIER}" \
         -d "redirect_uri=http://127.0.0.1:8000/noexist/callback" \
         -d "grant_type=authorization_code"
 
 The OAuth2 provider will return the follow response:
 
-.. code-block:: javascript
+.. code-block:: json
 
     {
       "access_token": "jooqrnOrNa0BrNWlg68u9sl6SkdFZg",
@@ -326,7 +361,7 @@ The Client Credential grant is suitable for machine-to-machine authentication. Y
 
 Point your browser to http://127.0.0.1:8000/o/applications/register/ lets create an application.
 
-Fill the form as show in the screenshot bellow and before save take note of ``Client id`` and ``Client secret`` we will use it in a minute.
+Fill the form as show in the screenshot below, and before saving take note of ``Client id`` and ``Client secret`` we will use it in a minute.
 
 .. image:: _images/application-register-client-credential.png
    :alt: Client credential application registration
@@ -352,17 +387,17 @@ We need to encode ``client_id`` and ``client_secret`` as HTTP base authenticatio
     b'YXhYU1NCVnV2T3lHVnpoNFB1cnZLYXE1TUhYTW03RnRySGdETWk0dToxZnV2NVdWZlI3QTVCbEYwbzE1NUg3czViTGdYbHdXTGhpM1k3cGRKOWFKdUNkbDBYVjVDeGdkMHRyaTduU3pDODBxeXJvdmg4cUZYRkhnRkFBYzBsZFBObjVaWUxhbnhTbTFTSTFyeGxScldVUDU5MXdwSERHYTNwU3BCNmRDWg=='
     >>>
 
-Export the credential as environment variable
+Export the credential as an environment variable
 
 .. code-block:: sh
 
     export CREDENTIAL=YXhYU1NCVnV2T3lHVnpoNFB1cnZLYXE1TUhYTW03RnRySGdETWk0dToxZnV2NVdWZlI3QTVCbEYwbzE1NUg3czViTGdYbHdXTGhpM1k3cGRKOWFKdUNkbDBYVjVDeGdkMHRyaTduU3pDODBxeXJvdmg4cUZYRkhnRkFBYzBsZFBObjVaWUxhbnhTbTFTSTFyeGxScldVUDU5MXdwSERHYTNwU3BCNmRDWg==
 
-To start the Client Credential flow you call ``/token/`` endpoint direct::
+To start the Client Credential flow you call ``/token/`` endpoint directly::
 
     curl -X POST -H "Authorization: Basic ${CREDENTIAL}" -H "Cache-Control: no-cache" -H "Content-Type: application/x-www-form-urlencoded" "http://127.0.0.1:8000/o/token/" -d "grant_type=client_credentials"
 
-To be more easy to visualize::
+To be easier to visualize::
 
     curl -X POST \
         -H "Authorization: Basic ${CREDENTIAL}" \
@@ -371,9 +406,9 @@ To be more easy to visualize::
         "http://127.0.0.1:8000/o/token/" \
         -d "grant_type=client_credentials"
 
-The OAuth2 provider will return the follow response:
+The OAuth2 provider will return the following response:
 
-.. code-block:: javascript
+.. code-block:: json
 
     {
         "access_token": "PaZDOD5UwzbGOFsQr34LQ7JUYOj3yK",
@@ -388,7 +423,7 @@ Next step is :doc:`first tutorial <tutorial/tutorial_01>`.
 .. _Whitson Gordon: https://en.wikipedia.org/wiki/OAuth#cite_note-1
 .. _User: https://docs.djangoproject.com/en/3.0/ref/contrib/auth/#django.contrib.auth.models.User
 .. _Django documentation: https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project
-.. _RFC6749: https://tools.ietf.org/html/rfc6749#section-1.3
+.. _RFC6749: https://rfc-editor.org/rfc/rfc6749.html#section-1.3
 .. _Grant Types: https://oauth.net/2/grant-types/
 .. _URL: http://127.0.0.1:8000/o/authorize/?response_type=code&client_id=vW1RcAl7Mb0d5gyHNQIAcH110lWoOW2BmWJIero8&redirect_uri=http://127.0.0.1:8000/noexist/callback
 
