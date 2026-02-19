@@ -89,6 +89,7 @@ class AbstractApplication(models.Model):
     refresh_token_expire_seconds = models.IntegerField(
         default=oauth2_settings.REFRESH_TOKEN_EXPIRE_SECONDS
     )
+
     class Meta:
         abstract = True
 
@@ -395,10 +396,10 @@ class AbstractRefreshToken(models.Model):
 
         now = timezone.now()
         is_refresh_token_expired = now >= expires
-        
+
         # Access token assumed to be expired, by default.
         is_access_token_expired = True
-        
+
         # RefreshToken should not outlive AccessToken.
         # NOTE: Check AccessToken expiration for backwards compatibility with
         # long-lived tokens.

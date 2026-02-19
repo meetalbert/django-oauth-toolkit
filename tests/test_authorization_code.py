@@ -2,7 +2,6 @@ import base64
 import datetime
 import hashlib
 import json
-import re
 from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
@@ -27,6 +26,7 @@ AccessToken = get_access_token_model()
 Grant = get_grant_model()
 RefreshToken = get_refresh_token_model()
 UserModel = get_user_model()
+
 
 # mocking a protected resource view
 class ResourceView(ProtectedResourceView):
@@ -1429,6 +1429,7 @@ class TestAuthorizationCodeTokenView(BaseTest):
         self.assertEqual(content["token_type"], "Bearer")
         self.assertEqual(content["scope"], "read write")
         self.assertEqual(content["expires_in"], oauth2_settings.ACCESS_TOKEN_EXPIRE_SECONDS)
+
 
 class TestAuthorizationCodeProtectedResource(BaseTest):
     def test_resource_access_allowed(self):

@@ -125,4 +125,4 @@ class CreateApplicationTest(TestCase):
 
         self.assertIn("user", output.getvalue())
         self.assertIn("783", output.getvalue())
-        self.assertIn("does not exist", output.getvalue())
+        self.assertIn("is not a valid choice", output.getvalue())

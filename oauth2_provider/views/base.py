@@ -200,6 +200,7 @@ class AuthorizationView(BaseAuthorizationView, FormView):
 
         return self.render_to_response(self.get_context_data(**kwargs))
 
+
 @method_decorator(csrf_exempt, name="dispatch")
 class TokenView(OAuthLibMixin, View):
     """
