@@ -1,8 +1,11 @@
 import json
 import logging
+import urllib.parse
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -193,12 +196,41 @@ class AuthorizationView(BaseAuthorizationView, FormView):
                             request=self.request, scopes=" ".join(scopes),
                             credentials=credentials, allow=True
                         )
-                        return self.redirect(uri, application)
+                        return self.redirect(uri, application, token)
 
         except OAuthToolkitError as error:
             return self.error_response(error, application)
 
         return self.render_to_response(self.get_context_data(**kwargs))
+
+    def redirect(self, redirect_to, application, token=None):
+
+        if not redirect_to.startswith("urn:ietf:wg:oauth:2.0:oob"):
+            return super().redirect(redirect_to, application)
+
+        parsed_redirect = urllib.parse.urlparse(redirect_to)
+        code = urllib.parse.parse_qs(parsed_redirect.query)["code"][0]
+
+        if redirect_to.startswith("urn:ietf:wg:oauth:2.0:oob:auto"):
+
+            response = {
+                    "access_token": code,
+                    "token_uri": redirect_to,
+                    "client_id": application.client_id,
+                    "client_secret": application.client_secret,
+                    "revoke_uri": reverse("oauth2_provider:revoke-token"),
+                    }
+
+            return JsonResponse(response)
+
+        else:
+            return render(
+                    request=self.request,
+                    template_name="oauth2_provider/authorized-oob.html",
+                    context={
+                        "code": code,
+                        },
+                    )
 
 
 @method_decorator(csrf_exempt, name="dispatch")
