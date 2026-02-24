@@ -406,7 +406,7 @@ class OAuth2Validator(RequestValidator):
         """
         Validate both grant_type is a valid string and grant_type is allowed for current workflow
         """
-        assert (grant_type in GRANT_TYPE_MAPPING)  # mapping misconfiguration
+        assert(grant_type in GRANT_TYPE_MAPPING)  # mapping misconfiguration
         return request.client.allows_grant_type(*GRANT_TYPE_MAPPING[grant_type])
 
     def validate_response_type(self, client_id, response_type, client, request, *args, **kwargs):
@@ -475,22 +475,11 @@ class OAuth2Validator(RequestValidator):
         if "scope" not in token:
             raise FatalClientError("Failed to renew access token: missing scope")
 
-        # "authenticate_client" sets the client (Application) on request.
-        app = request.client
-
-        # Users on older app versions should get long-lived tokens for
-        # backwards compatibility.
-        TRUE_VALUES = [True, "True", "true"]
-        is_legacy_token = getattr(request, "is_legacy_token", False)
-
-        if is_legacy_token in TRUE_VALUES:
-            expire_seconds = oauth2_settings.LEGACY_ACCESS_TOKEN_EXPIRE_SECONDS
-        else:
-            expire_seconds = app.access_token_expire_seconds
-
         # expires_in is passed to Server on initialization
         # custom server class can have logic to override this
-        expires = timezone.now() + timedelta(seconds=expire_seconds)
+        expires = timezone.now() + timedelta(seconds=token.get(
+            "expires_in", oauth2_settings.ACCESS_TOKEN_EXPIRE_SECONDS,
+        ))
 
         if request.grant_type == "client_credentials":
             request.user = None
@@ -633,10 +622,7 @@ class OAuth2Validator(RequestValidator):
         Check username and password correspond to a valid and active User
         """
         u = authenticate(username=username, password=password)
-
-        # NOTE: [11/20/2020] Removed check for u.is_active because the check
-        # will be made *before* calling DOT (Django OAuth Toolkit)
-        if u is not None:
+        if u is not None and u.is_active:
             request.user = u
             return True
         return False
@@ -661,33 +647,15 @@ class OAuth2Validator(RequestValidator):
                 seconds=oauth2_settings.REFRESH_TOKEN_GRACE_PERIOD_SECONDS
             )
         )
-        rt = (
-            RefreshToken.objects
-            .filter(null_or_recent, token=refresh_token)
-            .select_related("user", "access_token", "application")
-            .first()
-        )
+        rt = RefreshToken.objects.filter(null_or_recent, token=refresh_token).select_related(
+            "access_token"
+        ).first()
 
         if not rt:
             return False
-
-        # Revoke token if expired.
-        if rt.is_expired:
-            try:
-                rt.revoke()
-            # Catch exception in case access or refresh token do not exist
-            except (AccessToken.DoesNotExist, RefreshToken.DoesNotExist):
-                pass
 
         request.user = rt.user
         request.refresh_token = rt.token
         # Temporary store RefreshToken instance to be reused by get_original_scopes and save_bearer_token.
         request.refresh_token_instance = rt
-
-        # Token is valid if it refers to the right client AND is not expired
-        is_valid = (
-            rt.application == client and
-            not rt.is_expired
-        )
-
-        return is_valid
+        return rt.application == client
