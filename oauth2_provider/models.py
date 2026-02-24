@@ -83,6 +83,13 @@ class AbstractApplication(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+    access_token_expire_seconds = models.IntegerField(
+        default=oauth2_settings.ACCESS_TOKEN_EXPIRE_SECONDS
+    )
+    refresh_token_expire_seconds = models.IntegerField(
+        default=oauth2_settings.REFRESH_TOKEN_EXPIRE_SECONDS
+    )
+
     class Meta:
         abstract = True
 
@@ -169,7 +176,7 @@ class AbstractApplication(models.Model):
         """
         Determines whether the application can be used.
 
-        :param request: The HTTP request being processed.
+        :param request: The oauthlib.common.Request being processed.
         """
         return True
 
@@ -380,6 +387,29 @@ class AbstractRefreshToken(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     revoked = models.DateTimeField(null=True)
+
+    @property
+    def is_expired(self):
+        """Determine if RefreshToken is expired."""
+        expire_seconds = self.application.refresh_token_expire_seconds
+        expires = self.created + timedelta(seconds=expire_seconds)
+
+        now = timezone.now()
+        is_refresh_token_expired = now >= expires
+
+        # Access token assumed to be expired, by default.
+        is_access_token_expired = True
+
+        # RefreshToken should not outlive AccessToken.
+        # NOTE: Check AccessToken expiration for backwards compatibility with
+        # long-lived tokens.
+        if self.access_token:
+            access_token_expires = self.access_token.expires
+            is_access_token_expired = now >= access_token_expires
+
+        # RefreshToken expired if and only if both refresh and access tokens
+        # are expired.
+        return is_refresh_token_expired and is_access_token_expired
 
     def revoke(self):
         """
