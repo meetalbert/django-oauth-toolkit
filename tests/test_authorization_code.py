@@ -27,12 +27,9 @@ Grant = get_grant_model()
 RefreshToken = get_refresh_token_model()
 UserModel = get_user_model()
 
-<<<<<<< HEAD
-=======
 URI_OOB = "urn:ietf:wg:oauth:2.0:oob"
 URI_OOB_AUTO = "urn:ietf:wg:oauth:2.0:oob:auto"
 
->>>>>>> parent of d240046 (Remove support for insecure OOB flow)
 
 # mocking a protected resource view
 class ResourceView(ProtectedResourceView):
