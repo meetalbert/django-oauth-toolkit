@@ -2,6 +2,7 @@ import base64
 import datetime
 import hashlib
 import json
+import re
 from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
