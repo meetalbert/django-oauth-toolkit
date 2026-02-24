@@ -8,7 +8,7 @@ from .models import (
 
 class ApplicationAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
+        "id", 
         "name",
         "user",
         "access_token_expire_seconds",

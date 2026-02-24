@@ -406,7 +406,7 @@ class OAuth2Validator(RequestValidator):
         """
         Validate both grant_type is a valid string and grant_type is allowed for current workflow
         """
-        assert (grant_type in GRANT_TYPE_MAPPING)  # mapping misconfiguration
+        assert(grant_type in GRANT_TYPE_MAPPING)  # mapping misconfiguration
         return request.client.allows_grant_type(*GRANT_TYPE_MAPPING[grant_type])
 
     def validate_response_type(self, client_id, response_type, client, request, *args, **kwargs):
@@ -480,8 +480,8 @@ class OAuth2Validator(RequestValidator):
 
         # Users on older app versions should get long-lived tokens for
         # backwards compatibility.
-        TRUE_VALUES = [True, "True", "true"]
-        is_legacy_token = getattr(request, "is_legacy_token", False)
+        TRUE_VALUES = [True, 'True', 'true']
+        is_legacy_token = getattr(request, 'is_legacy_token', False)
 
         if is_legacy_token in TRUE_VALUES:
             expire_seconds = oauth2_settings.LEGACY_ACCESS_TOKEN_EXPIRE_SECONDS
