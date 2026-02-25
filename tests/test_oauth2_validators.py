@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 
+import requests
 from django.contrib.auth import get_user_model
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
@@ -399,19 +400,30 @@ class TestOAuth2ValidatorErrorResourceToken(TestCase):
     is unsuccessful.
     """
 
-    def setUp(self):
-        self.token = "test_token"
-        self.introspection_url = "http://example.com/token/introspection/"
-        self.introspection_token = "test_introspection_token"
-        self.validator = OAuth2Validator()
+    @classmethod
+    def setUpTestData(cls):
+        cls.token = "test_token"
+        cls.introspection_url = "http://example.com/token/introspection/"
+        cls.introspection_token = "test_introspection_token"
+        cls.validator = OAuth2Validator()
 
-    def test_response_when_auth_server_response_return_404(self):
-        with self.assertLogs(logger="oauth2_provider") as mock_log:
-            self.validator._get_token_from_authentication_server(
-                self.token, self.introspection_url,
-                self.introspection_token, None)
-            self.assertIn("ERROR:oauth2_provider:Introspection: Failed to "
-                          "get a valid response from authentication server. "
-                          "Status code: 404, Reason: "
-                          "Not Found.\nNoneType: None",
-                          mock_log.output)
+    def test_response_when_auth_server_response_not_200(self):
+        """
+        Ensure we log the error when the authentication server returns a non-200 response.
+        """
+        mock_response = requests.Response()
+        mock_response.status_code = 404
+        mock_response.reason = "Not Found"
+        with mock.patch("requests.post") as mock_post:
+            mock_post.return_value = mock_response
+            with self.assertLogs(logger="oauth2_provider") as mock_log:
+                self.validator._get_token_from_authentication_server(
+                    self.token, self.introspection_url, self.introspection_token, None
+                )
+                self.assertIn(
+                    "ERROR:oauth2_provider:Introspection: Failed to "
+                    "get a valid response from authentication server. "
+                    "Status code: 404, Reason: "
+                    "Not Found.\nNoneType: None",
+                    mock_log.output,
+                )
