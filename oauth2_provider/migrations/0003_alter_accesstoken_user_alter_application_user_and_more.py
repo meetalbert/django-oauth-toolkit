@@ -3,10 +3,11 @@
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
+from albert_common.django.migrations import LockTimeoutMigration
 
 
 
-class Migration(migrations.Migration):
+class Migration(LockTimeoutMigration):
 
     dependencies = [
         ('oauth2_provider', '0002_auto_20190406_1805'),
