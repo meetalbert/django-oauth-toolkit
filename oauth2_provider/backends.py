@@ -10,8 +10,8 @@ class OAuth2Backend(object):
     Authenticate against an OAuth2 access token
     """
 
-    def authenticate(self, **credentials):
-        request = credentials.get('request')
+    def authenticate(self, request=None, **credentials):
+        # Django skips any backend whose authenticate does not take request as its first argument.
         if request is not None:
             oauthlib_core = get_oauthlib_core()
             valid, r = oauthlib_core.verify_request(request, scopes=[])
