@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 import base64
 import json
 import datetime
-import mock
+from unittest import mock
 
 from django.test import TestCase, RequestFactory
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils import timezone
 
 from ..compat import urlparse, parse_qs, urlencode, get_user_model

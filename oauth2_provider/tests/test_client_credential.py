@@ -7,8 +7,8 @@ try:
 except ImportError:
     import urllib
 
-from django.core.urlresolvers import reverse
-from django.test import TestCase, RequestFactory
+from django.urls import reverse
+from django.test import Client, TestCase, RequestFactory
 from django.views.generic import View
 
 from oauthlib.oauth2 import BackendApplicationServer
@@ -17,7 +17,7 @@ from ..models import get_application_model, AccessToken
 from ..oauth2_backends import OAuthLibCore
 from ..oauth2_validators import OAuth2Validator
 from ..settings import oauth2_settings
-from ..views import ProtectedResourceView
+from ..views import ProtectedResourceView, TokenView
 from ..views.mixins import OAuthLibMixin
 from ..compat import get_user_model
 from .test_utils import TestCaseUtils
@@ -104,6 +104,30 @@ class TestClientCredential(BaseTest):
         content = json.loads(response.content.decode("utf-8"))
         access_token = AccessToken.objects.get(token=content["access_token"])
         self.assertIsNone(access_token.user)
+
+    def test_client_credential_token_view_is_csrf_exempt(self):
+        """
+        Machine clients post to the token endpoint without a CSRF token, so TokenView must stay exempt
+        when CsrfViewMiddleware enforces checks.
+        """
+        csrf_client = Client(enforce_csrf_checks=True)
+        token_request_data = {'grant_type': 'client_credentials'}
+        auth_headers = self.get_basic_auth_header(self.application.client_id, self.application.client_secret)
+
+        response = csrf_client.post(reverse('oauth2_provider:token'), data=token_request_data, **auth_headers)
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content.decode("utf-8"))
+        self.assertIn("access_token", content)
+
+    def test_token_view_subclass_is_csrf_exempt(self):
+        """
+        Projects subclass TokenView for their own token endpoints, and the subclass inherits the exemption.
+        """
+        class ProjectTokenView(TokenView):
+            pass
+
+        self.assertTrue(getattr(ProjectTokenView.as_view(), 'csrf_exempt', False))
 
 
 class TestExtendedRequest(BaseTest):

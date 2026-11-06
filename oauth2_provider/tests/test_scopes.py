@@ -4,7 +4,7 @@ import json
 
 from django.test import TestCase, RequestFactory
 from django.core.exceptions import ImproperlyConfigured
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .test_utils import TestCaseUtils
 from ..compat import urlparse, parse_qs, get_user_model, urlencode
