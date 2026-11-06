@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-import mock
+from unittest import mock
 from oauthlib.common import Request
 
 from ..oauth2_validators import OAuth2Validator

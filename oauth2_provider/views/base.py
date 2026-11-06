@@ -1,14 +1,14 @@
 import logging
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic import View, FormView
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 
 from oauthlib.oauth2 import Server
-
-from braces.views import LoginRequiredMixin, CsrfExemptMixin
 
 from ..settings import oauth2_settings
 from ..exceptions import OAuthToolkitError
@@ -154,7 +154,8 @@ class AuthorizationView(BaseAuthorizationView, FormView):
             return self.error_response(error)
 
 
-class TokenView(CsrfExemptMixin, OAuthLibMixin, View):
+@method_decorator(csrf_exempt, name='dispatch')
+class TokenView(OAuthLibMixin, View):
     """
     Implements an endpoint to provide access tokens
 
@@ -177,7 +178,8 @@ class TokenView(CsrfExemptMixin, OAuthLibMixin, View):
         return response
 
 
-class RevokeTokenView(CsrfExemptMixin, OAuthLibMixin, View):
+@method_decorator(csrf_exempt, name='dispatch')
+class RevokeTokenView(OAuthLibMixin, View):
     """
     Implements an endpoint to revoke access or refresh tokens
     """

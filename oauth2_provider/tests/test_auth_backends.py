@@ -2,7 +2,6 @@ from django.test import TestCase, RequestFactory
 from django.test.utils import override_settings
 from django.contrib.auth.models import AnonymousUser
 from django.utils.timezone import now, timedelta
-from django.conf.global_settings import MIDDLEWARE_CLASSES
 from django.http import HttpResponse
 
 from ..compat import get_user_model
@@ -76,7 +75,6 @@ class TestOAuth2Backend(BaseTest):
         'oauth2_provider.backends.OAuth2Backend',
         'django.contrib.auth.backends.ModelBackend',
     ),
-    MIDDLEWARE_CLASSES=MIDDLEWARE_CLASSES + ('oauth2_provider.middleware.OAuth2TokenMiddleware',)
 )
 class TestOAuth2Middleware(BaseTest):
 

@@ -15,7 +15,10 @@ class AllowForm(forms.Form):
         data = kwargs.get('data')
         # backwards compatible support for plural `scopes` query parameter
         if data and 'scopes' in data:
+            # request.POST is an immutable QueryDict, so the form sets scope on a copy.
+            data = data.copy()
             data['scope'] = data['scopes']
+            kwargs['data'] = data
         return super(AllowForm, self).__init__(*args, **kwargs)
 
 

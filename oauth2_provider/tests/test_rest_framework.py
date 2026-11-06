@@ -1,9 +1,12 @@
 from datetime import timedelta
 
-from django.conf.urls import patterns, url, include
+import unittest
+
 from django.http import HttpResponse
 from django.test import TestCase
-from django.utils import timezone, unittest
+from django.test.utils import override_settings
+from django.urls import include, re_path
+from django.utils import timezone
 
 
 from .test_utils import TestCaseUtils
@@ -40,13 +43,12 @@ try:
     class ReadWriteScopedView(OAuth2View):
         permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
 
-    urlpatterns = patterns(
-        '',
-        url(r'^oauth2/', include('oauth2_provider.urls')),
-        url(r'^oauth2-test/$', OAuth2View.as_view()),
-        url(r'^oauth2-scoped-test/$', ScopedView.as_view()),
-        url(r'^oauth2-read-write-test/$', ReadWriteScopedView.as_view()),
-    )
+    urlpatterns = [
+        re_path(r'^oauth2/', include('oauth2_provider.urls')),
+        re_path(r'^oauth2-test/$', OAuth2View.as_view()),
+        re_path(r'^oauth2-scoped-test/$', ScopedView.as_view()),
+        re_path(r'^oauth2-read-write-test/$', ReadWriteScopedView.as_view()),
+    ]
 
     rest_framework_installed = True
 except ImportError:
@@ -60,8 +62,8 @@ class BaseTest(TestCaseUtils, TestCase):
     pass
 
 
+@override_settings(ROOT_URLCONF='oauth2_provider.tests.test_rest_framework')
 class TestOAuth2Authentication(BaseTest):
-    urls = 'oauth2_provider.tests.test_rest_framework'
 
     def setUp(self):
         oauth2_settings._SCOPES = ['read', 'write', 'scope1', 'scope2']

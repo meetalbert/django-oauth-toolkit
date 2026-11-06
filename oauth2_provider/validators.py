@@ -4,8 +4,8 @@ import re
 from urllib.parse import urlsplit, urlunsplit
 
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext_lazy as _
-from django.utils.encoding import force_text
+from django.utils.translation import gettext_lazy as _
+from django.utils.encoding import force_str
 from django.core.validators import RegexValidator
 
 from .settings import oauth2_settings
@@ -28,7 +28,7 @@ class URIValidator(RegexValidator):
         except ValidationError as e:
             # Trivial case failed. Try for possible IDN domain
             if value:
-                value = force_text(value)
+                value = force_str(value)
                 scheme, netloc, path, query, fragment = urlsplit(value)
                 try:
                     netloc = netloc.encode('idna').decode('ascii')  # IDN -> ACE
@@ -48,7 +48,7 @@ class RedirectURIValidator(URIValidator):
 
     def __call__(self, value):
         super(RedirectURIValidator, self).__call__(value)
-        value = force_text(value)
+        value = force_str(value)
         if len(value.split('#')) > 1:
             raise ValidationError('Redirect URIs must not contain fragments')
         scheme, netloc, path, query, fragment = urlsplit(value)
